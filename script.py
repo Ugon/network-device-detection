@@ -81,7 +81,7 @@ devices = DeviceCollection()
 def full_network_search_deamon_thread():
 	if any(map(lambda info: info['ip'] is None, devices.get_all_info().values())):
 		log(msg='Performing network search')
-		for i in xrange(1, 256):
+		for i in xrange(1, 255):
 			arping(network_prefix + str(i), verbose=False, timeout=0.001)
 
 	Timer(full_network_search_period_seconds, full_network_search_deamon_thread).start()
@@ -126,7 +126,7 @@ def deamon_thread():
 
 for mac in devices_macs:
 	devices.add_device(mac)
-	
+
 Thread(target = sniffer_thread).start()
 Thread(target = deamon_thread).start()
 Thread(target = full_network_search_deamon_thread).start()
