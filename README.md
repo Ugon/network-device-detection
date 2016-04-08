@@ -1,1 +1,1 @@
-# network-device-detection
+# Network device detection
