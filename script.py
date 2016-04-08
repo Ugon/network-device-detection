@@ -119,13 +119,14 @@ def deamon_thread():
 
 		elif info['lastActive'] + start_pinging_after < datetime.datetime.now() and info['ip'] is not None:
 			log(mac, 'ping: ' + info['ip'])
-			sr(IP(dst="192.168.1.130")/ICMP(), verbose=False, timeout=3)
+			sr(IP(dst=info['ip'])/ICMP(), verbose=False, timeout=3)
 
 	Timer(deamon_period_seconds, deamon_thread).start()
 
 
 for mac in devices_macs:
 	devices.add_device(mac)
+	
 Thread(target = sniffer_thread).start()
 Thread(target = deamon_thread).start()
 Thread(target = full_network_search_deamon_thread).start()
