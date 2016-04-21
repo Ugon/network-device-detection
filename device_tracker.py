@@ -64,6 +64,11 @@ class DeviceTracker():
 		Thread(target = self._deamon_thread_fun).start()
 		Thread(target = self._full_network_search_deamon_thread_fun).start()
 
+	def get_registered(self):
+		return self.devices.keys()
+
+	def get_connected(self):
+		return [k for k, v in self.devices.iteritems() if v['detected']]
 
 	#############################################################
 	##########################INTERNAL###########################
@@ -118,7 +123,7 @@ class DeviceTracker():
 
 			if Ether in packet and packet[Ether].type == 0x0806 and packet.psrc.startswith(self.network_prefix): #if packet is ARP
 				self._set_ip(mac, packet.psrc)
-			
+
 				
 	def _sniffer_thread_fun(self):
 		sniff(prn=self._sniffer_action)
