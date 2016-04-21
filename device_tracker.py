@@ -42,9 +42,6 @@ class DeviceTracker():
 		self.deamon_period_seconds = deamon_period_seconds
 		self.full_network_search_period_seconds = full_network_search_period_seconds
 
-	def get_devices(self):
-		return self.devices.keys()
-
 	def add_device(self, mac):
 		_log(mac, 'added device')
 		self.devices[mac] = {'ip': None, 'lastActive': datetime.datetime(year=1, month=1, day=1), 'detected': False}

@@ -13,27 +13,25 @@ for mac in devices_macs:
 
 @app.route("/")
 def hello():
-  #return "ddd"
-  #return render_template('template.html', my_string="Wheeeee!", my_list=[0,1,2,3,4,5])
   return render_template('index.html', macs=device_tracker.get_devices())
 
 @app.route('/devices/<mac>', methods=['POST'])
 def add_device(mac):
-	device_tracker.add_device(parsed_mac)
+	device_tracker.add_device(mac)
 	return "ok"
 
 @app.route('/devices/<mac>', methods=['DELETE'])
 def delete_device(mac):
-	device_tracker.remove_device(parsed_mac)
+	device_tracker.remove_device(mac)
 	return "ok"
 
 @app.route('/devices/registered', methods=['GET'])
 def get_registered():
-	return str(device_tracker.get_devices())
+	return str(device_tracker.get_registered())
 
 @app.route('/devices/connected', methods=['GET'])
 def get_connected():
-	return "aaa"
+	return str(device_tracker.get_connected())
 
 @app.errorhandler(404)
 def not_found(error):
