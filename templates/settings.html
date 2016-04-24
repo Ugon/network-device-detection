@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+{% block content %}
+  <div class="panel panel-default">
+    <div class="panel-heading"><strong>{{mac}}</strong> settings</div>
+    <div class="panel-body">
+      <div id="alias" class="input-group">
+        <input id="alias-input" type="text" class="form-control" placeholder="Alias for this MAC...">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" onclick="setAliasFromInput('{{mac}}')">save</button>
+        </span>
+      </div>
+    </div>
+  </div>
+{% endblock %}
