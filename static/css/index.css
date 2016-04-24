@@ -2,3 +2,15 @@
 	float: right;
 	color: #B70000;
 }
+
+.disconnected-indicator {
+	color: #CCCCCC;
+}
+
+.connected-indicator {
+	color: #5CB85C;
+}
+
+#new-mac {
+	margin-bottom: 20px;
+}

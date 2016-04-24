@@ -1,10 +1,12 @@
+function reloadFunction() {
+	location.reload(true)
+}
+
 function removeMac(mac) {
 	$.ajax({
 		url: '/devices/' + mac,
 		method: 'DELETE',
-		success: function() {
-			location.reload(true)
-		}
+		success: reloadFunction
 	})
 }
 
@@ -13,8 +15,16 @@ function addMacFromInput() {
 	$.ajax({
 		url: '/devices/' + newMac,
 		method: 'POST',
-		success: function() {
-			location.reload(true)
-		}
+		success: reloadFunction
 	})
 }
+
+function setAliasFromInput(mac) {
+	var alias = $('#alias-input').val();
+	$.ajax({
+		url: '/devices/' + mac + "/alias/" + alias,
+		method: 'POST',
+		success: reloadFunction
+	})
+}
+
