@@ -9,6 +9,54 @@
           <button class="btn btn-default" type="button" onclick="setAliasFromInput('{{mac}}')">save</button>
         </span>
       </div>
+      <div id="connected">
+        <h6>Connected callbacks:</h6>
+        <div class="list-group">
+          {% for function in connected_callbacks %}
+          <a class="list-group-item">
+            <span>{{function}}</span>
+            <span class="remove-callback-btn" onclick="removeConnectedFunction('{{mac}}', '{{function}}')">
+              X
+            </span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div id="connected-dropdown" class="dropdown">
+        <button class="btn btn-default dropdown-toggle" type="button" id="add-connected" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          Add connected callback
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu callbacks-list" aria-labelledby="add-connected">
+          {% for function in available_functions %}
+          <li><a onclick="addConnectedFunction('{{mac}}','{{function}}')">{{function}}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div id="disconnected">
+        <h6>Disconnected callbacks:</h6>
+        <div class="list-group">
+          {% for function in disconnected_callbacks %}
+          <a class="list-group-item">
+            <span>{{function}}</span>
+            <span class="remove-callback-btn" onclick="removeDisconnectedFunction('{{mac}}', '{{function}}')">
+              X
+            </span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div id="disconnected-dropdown" class="dropdown">
+        <button class="btn btn-default dropdown-toggle" type="button" id="add-disconnected" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          Add disconnected callback
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu callbacks-list" aria-labelledby="add-disconnected">
+          {% for function in available_functions %}
+          <li><a onclick="addDisconnectedFunction('{{mac}}','{{function}}')">{{function}}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 {% endblock %}

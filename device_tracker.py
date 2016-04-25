@@ -17,24 +17,14 @@ class DeviceTracker():
 
 	def __init__(self, 
 				network_prefix,
+				config_object,
 				start_pinging_after = datetime.timedelta(seconds=5),
 				connection_lost_after = datetime.timedelta(seconds=10),
 				deamon_period_seconds = 1,
-				full_network_search_period_seconds = 30):
-		
-		def on_connected(mac):
-			print '#############################################################'
-			print '########## [' + mac       + '] connected ####################'
-			print '#############################################################'
-	
-		def on_disconnected(mac):
-			print '#############################################################'
-			print '########## [' + mac       + '] disconnected #################'
-			print '#############################################################'
+				full_network_search_period_seconds = 5):
 
 		self.devices = {}
-		self.on_connected = on_connected
-		self.on_disconnected = on_disconnected
+		self.config = config_object
 
 		self.network_prefix = network_prefix
 		self.start_pinging_after = start_pinging_after
@@ -45,16 +35,12 @@ class DeviceTracker():
 	def add_device(self, mac):
 		_log(mac, 'added device')
 		self.devices[mac] = {'ip': None, 'lastActive': datetime.datetime(year=1, month=1, day=1), 'detected': False}
-	
+		self.config.register(mac)
+
 	def remove_device(self, mac):
 		_log(mac, 'removed device')
+		self.config.unregister(mac)
 		del self.devices[mac]
-
-	def set_on_connected(self, function):
-		self.on_connected = function;
-
-	def set_on_disconnected(self, function):
-		self.on_disconnected = function;
 
 	def start(self):
 		Thread(target = self._sniffer_thread_fun).start()
@@ -65,11 +51,22 @@ class DeviceTracker():
 		return self.devices.keys()
 
 	def get_connected(self):
-		return [k for k, v in self.devices.iteritems() if v['detected']]
+		connected = [k for k, v in self.devices.iteritems() if v['detected']]
+		return connected
 
 	#############################################################
 	##########################INTERNAL###########################
 	#############################################################
+
+	def _execute_connected_functions_for(self, mac):
+		cbs = self.config.get_connected_callbacks(mac)
+		for cb in cbs:
+			cb()
+
+	def _execute_disconnected_functions_for(self, mac):
+		cbs = self.config.get_disconnected_callbacks(mac)
+		for cb in cbs:
+			cb()
 
 	def _contains_mac(self, mac):
 		return mac in self.devices
@@ -116,7 +113,7 @@ class DeviceTracker():
 
 			if not self._get_info(mac)['detected']:
 				self._set_detected(mac, True)
-				self.on_connected(mac)
+				self._execute_connected_functions_for(mac)
 
 			if Ether in packet and packet[Ether].type == 0x0806 and packet.psrc.startswith(self.network_prefix): #if packet is ARP
 				self._set_ip(mac, packet.psrc)
@@ -131,7 +128,7 @@ class DeviceTracker():
 			if info['lastActive'] + self.connection_lost_after < datetime.datetime.now():
 				if info['detected']:
 					self._set_detected(mac, False)
-					self.on_disconnected(mac)
+					self._execute_disconnected_functions_for(mac)
 
 				if info['ip'] is not None:
 					self._remove_ip(mac)

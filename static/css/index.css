@@ -3,6 +3,11 @@
 	color: #B70000;
 }
 
+.remove-callback-btn {
+	float: right;
+	color: #B70000;
+}
+
 .disconnected-indicator {
 	color: #CCCCCC;
 }
@@ -13,4 +18,12 @@
 
 #new-mac {
 	margin-bottom: 20px;
+}
+
+.callbacks-list {
+	width: 100%;
+}
+
+#add-connected, #add-disconnected {
+	width: 100%;
 }

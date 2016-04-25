@@ -28,3 +28,36 @@ function setAliasFromInput(mac) {
 	})
 }
 
+function addConnectedFunction(mac, functionName) {
+	$.ajax({
+		url: '/devices/' + mac + "/connected/" + functionName,
+		method: 'POST',
+		success: reloadFunction
+	})		
+}
+
+function addDisconnectedFunction(mac, functionName) {
+	$.ajax({
+		url: '/devices/' + mac + "/disconnected/" + functionName,
+		method: 'POST',
+		success: reloadFunction
+	})		
+}
+
+function removeConnectedFunction(mac, functionName) {
+	$.ajax({
+		url: '/devices/' + mac + "/connected/" + functionName,
+		method: 'DELETE',
+		success: reloadFunction
+	})		
+}
+
+function removeDisconnectedFunction(mac, functionName) {
+	$.ajax({
+		url: '/devices/' + mac + "/disconnected/" + functionName,
+		method: 'DELETE',
+		success: reloadFunction
+	})		
+}
+
+

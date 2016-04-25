@@ -1,7 +1,9 @@
+from functions import available_callback_functions
+
 class Settings():
 	def __init__(self):
 		self.macs = {}
-		self.available_callbacks = {}
+		self.available_callbacks = available_callback_functions
 
 	def register(self, mac):
 		self.macs[mac] = {
@@ -9,6 +11,13 @@ class Settings():
 			'connected': [],
 			'disconnected': []
 		}
+
+	def get_macs(self):
+		print self.macs
+		return self.macs.keys()
+
+	def unregister(self, mac):
+		del self.macs[mac]
 
 	def function_exists(self, name):
 		return name in self.available_callbacks.keys()
@@ -46,5 +55,12 @@ class Settings():
 	def get_disconnected_callbacks(self, mac):
 		return [self.available_callbacks[name] for name in self.macs[mac]['disconnected']]
 
-	def get_alias(self, mac):
-		return self.macs[mac]['alias']
+	def get_connected_callbacks_names(self, mac):
+		return self.macs[mac]['connected']
+
+	def get_disconnected_callbacks_names(self, mac):
+		return self.macs[mac]['disconnected']
+
+
+	def get_aliases(self):
+		return {mac: self.macs[mac]['alias'] for mac in self.macs.keys()}
