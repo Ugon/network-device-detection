@@ -33,6 +33,4 @@ except:
 def iseeyou():
 	print "OH, I SEE YOU!"
 
-available_callback_functions = {
-	'i_see_you': iseeyou
-}
+available_callback_functions['i_see_you'] = iseeyou
