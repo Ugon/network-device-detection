@@ -7,19 +7,23 @@ from settings import Settings
 from flask import Flask
 from flask import make_response
 from flask import render_template
+import logging
+import parameters
+
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 app = Flask(__name__)
-# staszka mac - dc:ee:06:a0:b5:56
 config = Settings()
-device_tracker = DeviceTracker(network_prefix = '192.168.43.', config_object=config)
 
-device_tracker.add_device('38:aa:3c:47:6f:3a')
-config.add_connected_callback('38:aa:3c:47:6f:3a', 'go')
-config.set_alias('38:aa:3c:47:6f:3a', 'somedevice')
+device_tracker = DeviceTracker(network_prefix = parameters.network_prefix, config_object=config)
+
+for mac, tuple in parameters.initial_devices.iteritems():
+  device_tracker.add_device(mac, tuple[1], tuple[2])
+  config.set_alias(mac, tuple[0])
 
 @app.route("/")
 def hello():
-  print config
+  # print config
   macs = config.get_macs()
   connected = device_tracker.get_connected()
   aliases = config.get_aliases()

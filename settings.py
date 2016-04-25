@@ -13,7 +13,7 @@ class Settings():
 		}
 
 	def get_macs(self):
-		print self.macs
+		# print self.macs
 		return self.macs.keys()
 
 	def unregister(self, mac):

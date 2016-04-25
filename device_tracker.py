@@ -1,7 +1,11 @@
 from scapy.all import *
 from copy import deepcopy
-from threading import Thread, Timer
+from threading import Thread
 import datetime
+import time
+import logging
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 def _log(mac=None, msg=None):
 	if mac is not None:
@@ -20,8 +24,8 @@ class DeviceTracker():
 				config_object,
 				start_pinging_after = datetime.timedelta(seconds=5),
 				connection_lost_after = datetime.timedelta(seconds=10),
-				deamon_period_seconds = 1,
-				full_network_search_period_seconds = 5):
+				deamon_period_seconds = 5,
+				full_network_search_period_seconds = 30):
 
 		self.devices = {}
 		self.config = config_object
@@ -32,10 +36,21 @@ class DeviceTracker():
 		self.deamon_period_seconds = deamon_period_seconds
 		self.full_network_search_period_seconds = full_network_search_period_seconds
 
-	def add_device(self, mac):
+	def add_device(self, mac, connected_callback = None, disconnected_callback = None):
 		_log(mac, 'added device')
-		self.devices[mac] = {'ip': None, 'lastActive': datetime.datetime(year=1, month=1, day=1), 'detected': False}
+		self.devices[mac] = {
+			'ip' : None, 
+			'lastActive' : datetime.datetime(year=1, month=1, day=1), 
+			'detected' : False,
+			'connected_callback' : connected_callback,
+			'disconnected_callback' : disconnected_callback }
 		self.config.register(mac)
+
+	def set_connected_callback(self, mac, connected_callback):
+		self.devices[mac]['connected_callback'] = connected_callback
+
+	def set_disconnected_callback(self, mac, disconnected_callback):
+		self.devices[mac]['disconnected_callback'] = disconnected_callback
 
 	def remove_device(self, mac):
 		_log(mac, 'removed device')
@@ -92,19 +107,30 @@ class DeviceTracker():
 	def _set_detected(self, mac, value):
 		_log(mac, 'set detected ' + str(value))
 		self.devices[mac]['detected'] = value
-
+		if value == False and self.devices[mac]['disconnected_callback'] is not None:
+			self.devices[mac]['disconnected_callback']()
+		elif value == True and self.devices[mac]['connected_callback'] is not None:
+			self.devices[mac]['connected_callback']()
 
 	#############################################################
 	##########################DEMONS#############################
 	#############################################################
 
-	def _full_network_search_deamon_thread_fun(self):
-		if any(map(lambda info: info['ip'] is None, self._get_all_info().values())):
-			_log(msg='Performing network search')
-			for i in xrange(1, 255):
-				arping(self.network_prefix + str(i), verbose=False, timeout=0.001)
+	def _ping_range(self, fromm, to):
+		for i in xrange(fromm, to):
+			ip = self.network_prefix + str(i)
+			send(IP(dst=ip)/ICMP(), verbose=False) 
 
-		Timer(self.full_network_search_period_seconds, self._full_network_search_deamon_thread_fun).start()
+
+	def _full_network_search_deamon_thread_fun(self):
+		while(True):
+			# if any(map(lambda info: info['ip'] is None, self._get_all_info().values())):
+			_log(msg='Performing network search')
+			for i in xrange(0, 24):
+				Thread(target = self._ping_range, args = (i * 10, (i + 1) * 10)).start()
+			Thread(target = self._ping_range, args = (250, 255)).start()
+
+			time.sleep(self.full_network_search_period_seconds)
 
 	def _sniffer_action(self, packet):
 		mac = packet.src
@@ -115,26 +141,27 @@ class DeviceTracker():
 				self._set_detected(mac, True)
 				self._execute_connected_functions_for(mac)
 
-			if Ether in packet and packet[Ether].type == 0x0806 and packet.psrc.startswith(self.network_prefix): #if packet is ARP
-				self._set_ip(mac, packet.psrc)
-
+			if Ether in packet and ICMP in packet[Ether] and packet[Ether][ICMP].type == 0:
+				if not self.devices[mac]['ip'] == packet[IP].src:
+					self._set_ip(mac, packet[IP].src)
 				
 	def _sniffer_thread_fun(self):
 		sniff(prn=self._sniffer_action)
 
 	def _deamon_thread_fun(self):
-		infos = self._get_all_info()
-		for mac, info in infos.iteritems():
-			if info['lastActive'] + self.connection_lost_after < datetime.datetime.now():
-				if info['detected']:
-					self._set_detected(mac, False)
-					self._execute_disconnected_functions_for(mac)
+		while(True):
+			infos = self._get_all_info()
+			for mac, info in infos.iteritems():
+				if info['lastActive'] + self.connection_lost_after < datetime.datetime.now():
+					if info['detected']:
+						self._set_detected(mac, False)
+						self._execute_disconnected_functions_for(mac)
+	
+					if info['ip'] is not None:
+						self._remove_ip(mac)
+	
+				elif info['lastActive'] + self.start_pinging_after < datetime.datetime.now() and info['ip'] is not None:
+					_log(mac, 'ping: ' + info['ip'])
+					send(IP(dst=info['ip'])/ICMP(), verbose=False)
 
-				if info['ip'] is not None:
-					self._remove_ip(mac)
-
-			elif info['lastActive'] + self.start_pinging_after < datetime.datetime.now() and info['ip'] is not None:
-				_log(mac, 'ping: ' + info['ip'])
-				sr(IP(dst=info['ip'])/ICMP(), verbose=False, timeout=3)
-
-		Timer(self.deamon_period_seconds, self._deamon_thread_fun).start()
+			time.sleep(self.deamon_period_seconds)
