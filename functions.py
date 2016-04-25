@@ -19,6 +19,7 @@ try:
 	def blink_red():
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
+		pin = 21
 		for i in range(10):
 			GPIO.setup(pin,GPIO.OUT)
 			GPIO.output(pin,GPIO.HIGH)
