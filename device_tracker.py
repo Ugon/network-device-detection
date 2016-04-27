@@ -4,6 +4,10 @@ from threading import Thread
 import datetime
 import time
 import logging
+import os
+import subprocess
+
+FNULL = open('/dev/null', 'w')
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -20,17 +24,18 @@ class DeviceTracker():
 	#############################################################
 
 	def __init__(self, 
-				network_prefix,
+				first_ip,
+				last_ip,
 				config_object,
 				start_pinging_after = datetime.timedelta(seconds=5),
-				connection_lost_after = datetime.timedelta(seconds=10),
+				connection_lost_after = datetime.timedelta(seconds=30),
 				deamon_period_seconds = 5,
 				full_network_search_period_seconds = 30):
-
 		self.devices = {}
 		self.config = config_object
 
-		self.network_prefix = network_prefix
+		self.first_ip = first_ip
+		self.last_ip = last_ip
 		self.start_pinging_after = start_pinging_after
 		self.connection_lost_after = connection_lost_after
 		self.deamon_period_seconds = deamon_period_seconds
@@ -116,19 +121,10 @@ class DeviceTracker():
 	##########################DEMONS#############################
 	#############################################################
 
-	def _ping_range(self, fromm, to):
-		for i in xrange(fromm, to):
-			ip = self.network_prefix + str(i)
-			send(IP(dst=ip)/ICMP(), verbose=False) 
-
-
 	def _full_network_search_deamon_thread_fun(self):
 		while(True):
-			# if any(map(lambda info: info['ip'] is None, self._get_all_info().values())):
 			_log(msg='Performing network search')
-			for i in xrange(0, 24):
-				Thread(target = self._ping_range, args = (i * 10, (i + 1) * 10)).start()
-			Thread(target = self._ping_range, args = (250, 255)).start()
+			subprocess.call('fping -c 1 -g ' + self.first_ip + ' ' + self.last_ip, shell=True, stdout=FNULL, stderr=FNULL)
 
 			time.sleep(self.full_network_search_period_seconds)
 
@@ -162,6 +158,7 @@ class DeviceTracker():
 	
 				elif info['lastActive'] + self.start_pinging_after < datetime.datetime.now() and info['ip'] is not None:
 					_log(mac, 'ping: ' + info['ip'])
-					send(IP(dst=info['ip'])/ICMP(), verbose=False)
+					# send(IP(dst=info['ip'])/ICMP(), verbose=False)
+					subprocess.call('ping ' + info['ip'] + ' -c 1 -w 1', shell=True, stdout=FNULL, stderr=FNULL)
 
 			time.sleep(self.deamon_period_seconds)

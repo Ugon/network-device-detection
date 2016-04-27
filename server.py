@@ -9,21 +9,23 @@ from flask import make_response
 from flask import render_template
 import logging
 import parameters
+import functions
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 app = Flask(__name__)
 config = Settings()
 
-device_tracker = DeviceTracker(network_prefix = parameters.network_prefix, config_object=config)
+device_tracker = DeviceTracker(first_ip=parameters.first_ip, last_ip=parameters.last_ip, config_object=config)
 
 for mac, tuple in parameters.initial_devices.iteritems():
-  device_tracker.add_device(mac, tuple[1], tuple[2])
+  device_tracker.add_device(mac)
   config.set_alias(mac, tuple[0])
+  config.add_connected_callback(mac, tuple[1])
+  config.add_disconnected_callback(mac, tuple[2])
 
 @app.route("/")
 def hello():
-  # print config
   macs = config.get_macs()
   connected = device_tracker.get_connected()
   aliases = config.get_aliases()
