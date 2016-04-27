@@ -28,7 +28,7 @@ class DeviceTracker():
 				last_ip,
 				config_object,
 				start_pinging_after = datetime.timedelta(seconds=5),
-				connection_lost_after = datetime.timedelta(seconds=30),
+				connection_lost_after = datetime.timedelta(seconds=15),
 				deamon_period_seconds = 5,
 				full_network_search_period_seconds = 30):
 		self.devices = {}
